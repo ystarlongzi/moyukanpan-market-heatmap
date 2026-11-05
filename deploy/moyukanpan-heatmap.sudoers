@@ -1,0 +1,1 @@
+heatmap-deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart moyukanpan-heatmap.service, /usr/bin/systemctl stop moyukanpan-heatmap.service

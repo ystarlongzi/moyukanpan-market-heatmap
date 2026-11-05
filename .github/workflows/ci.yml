@@ -36,7 +36,9 @@ jobs:
         run: pnpm lint
 
       - name: 类型检查
-        run: pnpm typecheck
+        run: |
+          pnpm exec next typegen
+          pnpm typecheck
 
       - name: 单元测试
         run: pnpm test

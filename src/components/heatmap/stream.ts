@@ -117,37 +117,6 @@ export function useIsMobile() {
   return isMobile;
 }
 
-// 判定设备是否真的支持 hover（鼠标/触控板），而不是只看宽度：
-// 平板和触屏笔记本不该被当成桌面端。
-//
-// 返回三态：null = 还没解析。SSR 与客户端首帧都是 null，保证两边渲染一致；
-// 直接用 matchMedia 初始化会触发 hydration mismatch。
-export function useHoverCapable() {
-  const [hoverCapable, setHoverCapable] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-      setHoverCapable(false);
-      return;
-    }
-
-    const query = window.matchMedia("(hover: hover) and (pointer: fine)");
-    const update = () => setHoverCapable(query.matches);
-
-    update();
-
-    if (typeof query.addEventListener === "function") {
-      query.addEventListener("change", update);
-      return () => query.removeEventListener("change", update);
-    }
-
-    query.addListener(update);
-    return () => query.removeListener(update);
-  }, []);
-
-  return hoverCapable;
-}
-
 export function canvasToBlob(canvas: HTMLCanvasElement) {
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => {

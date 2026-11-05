@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Copy,
   Download,
+  Globe,
   Info,
   LayoutGrid,
   ListFilter,
@@ -36,7 +37,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -84,11 +84,9 @@ import {
 } from "@/lib/watchlist";
 import { useHeatmapWebMcp } from "@/hooks/use-heatmap-webmcp";
 import { useHeatmapViewData } from "@/hooks/use-heatmap-view-data";
-import { GitHubMark } from "@/components/heatmap/github-mark";
 import { InspectorHeaderSparkline, InspectorSortControls } from "@/components/heatmap/inspector-parts";
 import { MobileStockSheet } from "@/components/heatmap/mobile-stock-sheet";
 import { HeatmapLoadingOverlay } from "@/components/heatmap/loading-overlay";
-import { RewardTipTrigger } from "@/components/heatmap/reward-tip";
 import { FilterPanel, FilterPopover } from "@/components/heatmap/filter-panel";
 import { getCanvasViewportBounds, intersectsBounds } from "@/components/heatmap/canvas-viewport";
 import {
@@ -102,6 +100,8 @@ import {
 import {
   allTrendsValue,
   boardFilterStorageKey,
+  brandDomain,
+  brandHomeUrl,
   changeRangeFilterStorageKey,
   defaultRefreshIntervalSeconds,
   desktopMaxZoom,
@@ -112,7 +112,6 @@ import {
   filterHoverOpenDelayMs,
   filterOpenModeStorageKey,
   flatThreshold,
-  githubProjectUrl,
   headerTrendStatsStorageKey,
   heatmapBordersQueryKey,
   heatmapBordersStorageKey,
@@ -1347,13 +1346,6 @@ export function MarketHeatmap({ locale: initialLocale }: { locale: Locale }) {
     setFiltersOpen(false);
     setSettingsTab("watchlist");
     setSettingsOpen(true);
-  }, []);
-
-  const openRewardSettings = useCallback(() => {
-    setFiltersOpen(false);
-    setSettingsTab("project");
-    setSettingsOpen(true);
-    setSidebarOpen(false);
   }, []);
 
   const addWatchlistItem = useCallback(
@@ -3136,13 +3128,7 @@ export function MarketHeatmap({ locale: initialLocale }: { locale: Locale }) {
       const shareTitle =
         baseWidth < 520
           ? `${messages.title} ${getCompactPeriodLabel(period, "zh")} ${formatShareTimestamp(updatedAt)}`
-          : `${messages.title}｜${getPeriodLabel(messages, period)} ${formatShareTimestamp(updatedAt)}`;
-      const shareUrlLight = isLightMode ? "rgba(15, 23, 42, 0.96)" : "rgba(247, 250, 252, 0.98)";
-      const shareUrlParts: { text: string; fillStyle: string }[] = [
-        { text: "dapan", fillStyle: shareUrlLight },
-        { text: ".app", fillStyle: "#22c55e" },
-      ];
-
+          : `${messages.shareDialogTitle}｜${getPeriodLabel(messages, period)} ${formatShareTimestamp(updatedAt)}`;
       const headerY = topPadding / 2;
       const footerY = exportCanvas.height - bottomPadding / 2;
       const rightEdge = exportCanvas.width - horizontalPadding;
@@ -3154,12 +3140,8 @@ export function MarketHeatmap({ locale: initialLocale }: { locale: Locale }) {
       context.font = `600 ${fontPx}px Arial, sans-serif`;
       context.textAlign = "left";
 
-      let urlX = domainStartX;
-      for (const part of shareUrlParts) {
-        context.fillStyle = part.fillStyle;
-        context.fillText(part.text, urlX, headerY);
-        urlX += context.measureText(part.text).width;
-      }
+      context.fillStyle = isLightMode ? "rgba(15, 23, 42, 0.96)" : "rgba(247, 250, 252, 0.98)";
+      context.fillText(brandDomain, domainStartX, headerY);
 
       context.textAlign = "right";
       context.fillStyle = isLightMode ? "rgba(15, 23, 42, 0.92)" : "rgba(247, 250, 252, 0.96)";
@@ -3171,7 +3153,7 @@ export function MarketHeatmap({ locale: initialLocale }: { locale: Locale }) {
       const [blob, backgroundBlob] = await Promise.all([
         canvasToBlob(exportCanvas),
         canvasToBlob(addShareBackground(snapshotCanvas, pixelRatio, {
-          title: messages.title,
+          title: messages.shareDialogTitle,
           subtitle: `${getPeriodLabel(messages, period)}  ·  ${formatShareTimestamp(updatedAt)}`,
           logo: logoImage,
         })),
@@ -3188,7 +3170,7 @@ export function MarketHeatmap({ locale: initialLocale }: { locale: Locale }) {
       }));
       if (!isCurrentRequest()) return;
       const stamp = updatedAt ? updatedAt.replace(/[:T]/g, "-").slice(0, 19) : Date.now().toString();
-      const filename = `ashare-heatmap-${market}-${period}-${stamp}.png`;
+      const filename = `moyukanpan-heatmap-${market}-${period}-${stamp}.png`;
 
       setSharePreviews({
         plain: { url: plainUrl, filename, blob },
@@ -3571,30 +3553,19 @@ export function MarketHeatmap({ locale: initialLocale }: { locale: Locale }) {
               )}
             >
               <div className={cn("flex items-center justify-between gap-2 border-b border-border px-2 py-1.5 sm:px-2.5", isEnglish && "py-1")}>
-                <div className="flex min-w-0 items-center gap-2">
-                  <RewardTipTrigger
-                    messages={messages}
-                    onOpen={openRewardSettings}
-                    className="rounded transition-opacity hover:opacity-85"
-                  >
-                    <img src="/icon.svg" alt="" className="size-7 shrink-0" decoding="async" />
-                  </RewardTipTrigger>
-                  <h2
-                    className={cn(
-                      "min-w-0 truncate whitespace-nowrap font-semibold leading-tight tracking-[0.01em]",
-                      isEnglish ? "text-[12px] sm:text-[13px]" : "text-[13px] sm:text-sm"
-                    )}
-                  >
-                    <Link
-                      href="/features"
-                      prefetch={false}
-                      title={messages.aboutSite}
-                      className="block truncate transition-colors hover:text-brand focus-visible:text-brand focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand"
-                    >
-                      {messages.title}
-                    </Link>
-                  </h2>
-                </div>
+                <a
+                  href={brandHomeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={messages.brandHome}
+                  className="flex min-w-0 items-center gap-2 rounded transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                >
+                  <img src="/icon.svg" alt="" width={28} height={28} className="size-7 shrink-0" decoding="async" />
+                  <div className="min-w-0">
+                    <span className="block truncate text-[13px] font-semibold leading-tight">{messages.brandName}</span>
+                    <h2 className="mt-0.5 truncate text-[10px] leading-tight text-muted-foreground">{messages.title}</h2>
+                  </div>
+                </a>
                 <button
                   type="button"
                   onClick={() => setSidebarOpen(false)}
@@ -4404,23 +4375,12 @@ export function MarketHeatmap({ locale: initialLocale }: { locale: Locale }) {
                 >
                   {isLightMode ? <Moon className="size-3.5" /> : <Sun className="size-3.5" />}
                 </button>
-                <RewardTipTrigger
-                  messages={messages}
-                  onOpen={openRewardSettings}
-                  side="top"
-                  className={cn(
-                    "size-7 rounded-full text-muted-foreground focus-visible:text-brand",
-                    isLightMode
-                      ? "hover:bg-muted focus-visible:bg-muted"
-                      : "text-slate-400 hover:bg-white/5 focus-visible:bg-white/5"
-                  )}
-                />
                 <a
-                  href={githubProjectUrl}
+                  href={brandHomeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={messages.githubProject}
-                  title={messages.githubProject}
+                  aria-label={messages.brandHome}
+                  title={messages.brandHome}
                   className={cn(
                     "hidden min-w-0 shrink-0 items-center gap-1.5 text-[11px] font-normal tracking-tight transition-colors sm:text-[12px] md:inline-flex",
                     isLightMode
@@ -4428,8 +4388,8 @@ export function MarketHeatmap({ locale: initialLocale }: { locale: Locale }) {
                       : "text-slate-500/75 hover:text-slate-400"
                   )}
                 >
-                  <GitHubMark className="size-3.5 shrink-0 opacity-80" />
-                  <span className="min-w-0 truncate">dapan.app</span>
+                  <Globe className="size-3.5 shrink-0 opacity-80" aria-hidden />
+                  <span className="min-w-0 truncate">{brandDomain}</span>
                 </a>
               </div>
 
@@ -4512,11 +4472,11 @@ export function MarketHeatmap({ locale: initialLocale }: { locale: Locale }) {
 
               <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
                 <a
-                  href={githubProjectUrl}
+                  href={brandHomeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={messages.githubProject}
-                  title={messages.githubProject}
+                  aria-label={messages.brandHome}
+                  title={messages.brandHome}
                   className={cn(
                     "inline-flex size-7 items-center justify-center bg-transparent transition-colors hover:text-brand focus-visible:text-brand md:hidden",
                     isLightMode
@@ -4524,7 +4484,7 @@ export function MarketHeatmap({ locale: initialLocale }: { locale: Locale }) {
                       : "text-slate-400 hover:bg-white/5 focus-visible:bg-white/5"
                   )}
                 >
-                  <GitHubMark className="size-3.5 opacity-80" />
+                  <Globe className="size-3.5 opacity-80" aria-hidden />
                 </a>
 
                 <div className="group relative hidden shrink-0 md:block">

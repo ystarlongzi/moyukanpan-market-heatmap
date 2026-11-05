@@ -1,0 +1,25 @@
+[Unit]
+Description=Moyu Kanpan A-Share Heatmap
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=heatmap
+Group=heatmap
+WorkingDirectory=/opt/moyukanpan-heatmap/current
+Environment=NODE_ENV=production
+Environment=NEXT_TELEMETRY_DISABLED=1
+Environment=HOSTNAME=127.0.0.1
+Environment=PORT=3215
+EnvironmentFile=/opt/moyukanpan-heatmap/current/release.env
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

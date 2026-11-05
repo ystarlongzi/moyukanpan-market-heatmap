@@ -1,195 +1,44 @@
-<p align="center">
-  <img src="./public/og-image.png" alt="A 股市场热力图" width="640" />
-</p>
+# 摸鱼看盘 · A 股云图
 
-# A 股市场热力图
+独立的 Next.js 网页。色块面积表示流通市值，颜色表示所选周期的涨跌幅。页面支持按市场和行业浏览、管理自选、缩放、全屏和截图。
 
-一个开源的 **A 股大盘云图** 项目，把整个 A 股市场浓缩成一张可交互的 **A 股市场热力图**。色块大小代表个股流通市值权重，颜色深浅代表当日涨跌幅，让你在几秒钟内看清沪深两市的涨跌结构、行业板块轮动和资金流向。
+## 本地运行
 
-支持沪深 A 股全图、沪深 300、中证 A50、中证 A500、A 股主板、创业板、科创板等多个市场范围切换，也可以按一级行业板块单独查看热力图，或用股票名称/代码添加自选列表；涨跌区间支持当日、近 5 日、近 20 日、今年以来等多个周期，适合作为个人盘前盘后复盘工具，或嵌入财经站点、量化研究平台的市场概览模块。
+使用 Node.js 22 或更新版本。进入本目录后执行：
 
-<p align="center">
-  <a href="https://dapan.app">
-    <img src="https://img.shields.io/badge/在线预览-dapan.app-1f6feb?style=for-the-badge&logo=vercel&logoColor=white" alt="在线预览" />
-  </a>
-  &nbsp;
-  <a href="https://vercel.com/new/clone?repository-url=https://github.com/wenyuanw/a-share-heatmap">
-    <img src="https://img.shields.io/badge/一键部署-Deploy%20with%20Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="一键部署到 Vercel" />
-  </a>
-</p>
-
-<p align="center">
-  <a href="./public/preview.png">
-    <img src="./public/preview.png" alt="A 股市场热力图桌面与手机端预览：默认经典配色，当日行情" width="1000" />
-  </a>
-</p>
-
-## 功能亮点
-
-- **全市场云图**：按行业和流通市值权重绘制 A 股矩形树图，越大的色块代表越高的市场权重。
-- **涨跌一眼可见**：红绿配色映射个股涨跌幅，底部图例帮助快速判断行情强弱。
-- **多市场范围**：支持 A 股全图、上证 A 股、深证 A 股、沪深 300、中证 A50、中证 A500、A 股主板、创业板、科创板。
-- **自选热力图**：按股票名称或代码添加关注列表，生成个人自选股热力图，列表保存在本地浏览器中。
-- **一级板块筛选**：可在任意市场范围内切换到单个一级行业板块，聚焦查看该板块内部个股热力图。
-- **多周期表现**：支持当日、近 5 日、近 20 日、今年以来等涨跌区间切换。
-- **交互式看盘**：支持滚轮缩放、拖拽平移、悬浮查看个股详情、双击个股跳转雪球，双击一级板块标题可聚焦或清除板块筛选。
-- **市场概览面板**：展示上涨、平盘、下跌家数，以及成交额和相对昨日的量能变化；切换一级板块后会同步重算当前板块统计。
-- **截图分享**：一键生成热力图快照，支持下载、复制图片和系统分享。
-- **部署友好**：基于 Next.js API Routes 获取行情快照，短缓存适合 Vercel Serverless 环境。
-
-## 适合场景
-
-- 想拥有一个属于自己的 A 股大盘云图站点，盘中随时打开看一眼当下的市场情绪
-- 在个人投资仪表盘里增加一块 A 股市场热力图，把当日涨跌结构和板块轮动一屏呈现
-- 财经媒体、券商研究或量化平台需要嵌入轻量的 A 股板块热力图，并支持从全市场快速下钻到一级行业板块
-- 学习如何用 Canvas 绘制几千只股票规模的矩形树图，并处理缩放、拖拽等交互细节
-
-## 快速开始
-
-```bash
-pnpm install
-pnpm dev
+```sh
+pnpm install --frozen-lockfile
+pnpm dev --hostname 127.0.0.1 --port 3215
 ```
 
-打开 [http://localhost:3000](http://localhost:3000) 查看页面。
+打开 [http://127.0.0.1:3215/](http://127.0.0.1:3215/)。
 
-### URL 显示参数
+## 数据和验证
 
-可以通过 `borders` 参数直接指定热力图是否显示边框：
+行情接口位于 `src/app/api/heatmap`。服务端沿用上游取数和缓存逻辑，优先使用腾讯行情，按覆盖情况由新浪、东方财富补充。同花顺提供部分市场统计。内置快照用于冷启动和失败兜底，行情日期以页面显示为准。
 
-- `?borders=off`：隐藏实线边框，仅保留一级板块间隙。
-- `?borders=on`：显示完整边框。
-
-URL 参数优先于浏览器中保存的显示偏好，移除参数后会恢复本地设置。同时支持 `true` / `false` 和 `1` / `0`。
-
-### WebMCP 实验支持
-
-项目提供一组可被浏览器 AI 发现的 WebMCP 工具：
-
-- `list_heatmap_themes`：列出内置和已保存的热力图配色。
-- `set_heatmap_theme`：切换已有配色，或用上涨、下跌、横盘三个 Hex 颜色生成自定义配色。
-- `get_heatmap_state`：读取当前市场、周期、筛选、视图、选中项和行情摘要。
-- `set_heatmap_view`：切换市场范围、涨跌周期、面积指标和缩略图模式。
-- `set_heatmap_filters`：设置板块、上涨/下跌和涨跌幅区间筛选。
-- `get_top_stocks`：按涨跌幅、成交额或市值面积查看当前热力图中的个股排行。
-- `get_board_rankings`：按加权涨跌幅、成交额、市值面积或股票数量查看板块排行。
-- `search_stocks`：按名称或代码搜索股票，适合先发现准确代码。
-- `get_watchlist`：读取本地自选股，并尽量附带最新行情。
-- `add_to_watchlist`、`remove_from_watchlist`：添加或移除本地自选股。
-- `clear_watchlist`：清空自选股，必须显式传入 `confirm: true`。
-
-#### 使用 ChatGPT 桌面版内置浏览器
-
-ChatGPT 桌面版的内置浏览器支持通过 Site tools 使用网页提供的 WebMCP 工具，不需要安装额外扩展。具体是否出现 Site tools 入口，取决于账号、工作区和当前模型是否已获得支持；可参考 [OpenAI Site tools 使用说明](https://help.openai.com/en/articles/20001423-using-site-tools-in-the-chatgpt-desktop-app)。
-
-1. 将 ChatGPT 桌面版更新到最新版，在 Work 或 Codex 中打开一个支持 Site tools 的对话。
-2. 从 ChatGPT 工具栏打开内置浏览器，访问本页面。
-3. 如果 ChatGPT 请求网页访问权限，允许使用 Site tools；地址栏出现 Site tools 指示后，在同一个对话中直接提出需求。
-4. 观察页面和对话结果。地址栏中的 Site tools 菜单可以查看可用工具及最近使用的工具。
-
-可以直接测试：
-
-```text
-请使用当前页面提供的 Site tools 读取热力图状态，告诉我当前市场范围、涨跌周期、筛选条件和市场概览。不要使用普通点击操作。
+```sh
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
 ```
 
-```text
-请使用当前页面提供的 Site tools 切换到沪深 300，设置为近 20 日，并列出涨幅最大的 10 只股票。
+Canvas 云图和行情实现基于 [wenyuanw/a-share-heatmap 722d8e6](https://github.com/wenyuanw/a-share-heatmap/tree/722d8e692009ef77fc195f46361b0550e6319e84)，原始版权和许可见 [LICENSE](LICENSE)。
+
+## VPS 部署
+
+独立服务的首次配置、GitHub Actions 变量和回退方式见 [部署说明](docs/deployment.md)。
+
+## 同步上游
+
+独立仓库的 `upstream` 指向 dapan.app 源码。定期拉取上游，再按需合入云图、行情和安全更新：
+
+```sh
+git fetch upstream
+git diff --stat 722d8e692009ef77fc195f46361b0550e6319e84 upstream/main
 ```
 
-```text
-请使用当前页面的 Site tools 搜索宁德时代，把准确的股票加入我的自选股，然后读取自选股。不要清空自选股。
-```
-
-```text
-请使用当前页面的 Site tools 创建并应用一个赛博朋克风格的热力图主题：上涨 #00e5ff，下跌 #ff2bd6，横盘 #7c3aed。
-```
-
-视频演示：
-
-<video src="https://github.com/user-attachments/assets/6ac63bdf-8357-456b-ba00-ec7d54bb96e7" width="820" />
-</video>
-
-#### 使用 Chrome 和 Inspector 调试
-
-WebMCP 仍处于实验阶段。开发测试时，可以打开 `chrome://flags/#enable-webmcp-testing`，将选项设为 Enabled 并重启 Chrome；也可以参加 Chrome 149 起提供的 [Origin Trial](https://developer.chrome.com/docs/ai/webmcp)。完整的 API 与实验说明可参考 [Chrome WebMCP 官方文档](https://developer.chrome.com/docs/ai/webmcp)。在页面中安装并打开 [WebMCP Model Context Tool Inspector](https://chromewebstore.google.com/detail/webmcp-model-context-tool/gbpdfapgefenggkahomfgkhfehlcenpd)，即可查看和手动调用已注册工具。这是 WebMCP 的调试路径，不等同于 ChatGPT 桌面版内置浏览器的 Site tools 调用。
-
-普通不支持 WebMCP 的浏览器会自动跳过工具注册，不影响页面原有功能；但普通浏览器本身不会替 ChatGPT 完成真实的 Site tools 调用。
-
-## 一键部署
-
-点击上方 Vercel 按钮后，会直接基于 [wenyuanw/a-share-heatmap](https://github.com/wenyuanw/a-share-heatmap) 创建并部署项目。
-
-也可以在 Vercel 控制台导入仓库。项目无需配置环境变量。
-
-## 常用命令
-
-```bash
-pnpm dev        # 本地开发
-pnpm build      # 生产构建
-pnpm start      # 启动生产服务
-pnpm lint       # ESLint 检查
-pnpm typecheck  # TypeScript 类型检查
-pnpm test       # vitest 单元测试
-pnpm test:watch # watch 模式运行单元测试
-```
-
-## 数据说明
-
-项目会优先请求公开行情快照，并在服务端做秒级缓存，减少页面刷新时的接口压力。全市场接口返回的股票名册、名称、市值和行业会与价格一起解析，因此新上市股票无需手工加入。行情名册与内置名册合并，只有确认已生效的退市/旧代码替换记录才删除证券，避免行情源漏报停牌股或新股。远端不可用时自动使用 `src/lib/data` 中的内置快照，确保页面仍可正常打开。
-
-内置快照可手动刷新：
-
-```bash
-pnpm check:data    # 只拉取并校验，不写文件
-pnpm refresh:data  # 校验通过后更新行情、行业映射和上市状态三份快照
-```
-
-仓库中的“刷新 A 股股票池”工作流会在每个工作日北京时间 18:30 自动运行，校验股票数量、代码唯一性和市值字段覆盖率，通过后提交数据变化并触发后续部署。
-
-刷新脚本先独立同步沪深交易所的“终止上市”名册，再获取东方财富全市场行情；接口连续失败时，自动切换腾讯批量行情。腾讯只刷新已有股票的价格、涨跌和市值，仍会应用本次同步的退市状态；新增股票依赖全市场源。缺失行情、长期停牌、零涨跌、ST 名称、未知行业均不作为删除条件，退市整理期股票在正式摘牌前仍保留。北交所 81 开头的定向可转债等非 A 股证券也不会纳入热力图。
-
-上市状态保存在 `src/lib/data/stock-listing-status.json`，内置快照、实时股票池共用相同过滤规则。沪深名册每次刷新都校验全部分页、记录数、唯一性、日期和异常缩减；获取失败或数据不完整时中止，不覆盖原文件。已有退市记录从上游消失时也中止，需核实是否重新上市并更新保存的名册，不能仅凭“查不到退市记录”让旧行情恢复入池。确认退市的删除在原有数量保护之前完成，不放宽对意外数据丢失的保护。腾讯有效行情覆盖不足 90% 时也会中止。可用 `pnpm check:data --source=tencent` 验证备用行情路径，或用 `--source=eastmoney` 严格验证主源。
-
-**覆盖边界：** 沪深退市名册来自交易所自动同步。北交所批量接口当前不可用，北交所已核实的退市/转板记录，以及沪市历史代码变更，保存在 `scripts/lib/listing-status-supplement.json`，逐条记录生效日期和公告来源；新增北交所退市或旧代码变更需要核实公告后维护此文件，不能宣称北交所退市已全自动同步。不要通过名称包含“退”、报价时间、零成交或缺少行业猜测退市，也不要删除整个“其他”板块。转板只排除旧代码，保留仍在上市的新代码。补充记录涉及重新上市时同样需要核实并更新。
-
-## 技术栈
-
-- Next.js App Router
-- React
-- Canvas 2D
-- Tailwind CSS
-- Vercel Serverless Functions
-
-## 赞赏支持
-
-这个项目是业余时间维护的。如果这张热力图对你的复盘有帮助，可以扫码请作者喝杯咖啡：
-
-<p align="center">
-  <img src="./public/sponsor/reward-cover.jpg" alt="赞赏码：请作者喝杯咖啡" width="320" />
-</p>
-
-也可以直接通过 [GitHub Sponsors](https://github.com/sponsors/wenyuanw) 支持。
-
-感谢每一位支持项目的朋友，你们的鼓励让我更有动力持续维护和改进。
-
-<!-- supporters:start -->
-
-- [laojuelv.com](https://laojuelv.com)
-- [newkeeb.com](https://newkeeb.com)
-- [晾衣绳便签](https://www.clothesline-notes.com/)
-- SWQ、LZ、Gin 等群友
-
-<!-- supporters:end -->
-
-## 参考与致谢
-
-在设计交互、配色和信息密度时，参考了下面这些优秀的市场热力图产品：
-
-- [Finviz Map](https://finviz.com/map) — 美股市场热力图的经典之作，矩形树图布局的标杆。
-- [TradingView Stock Heatmap](https://tw.tradingview.com/heatmap/stock) — 多市场可切换的股票热力图，交互体验流畅。
-- [52ETF 市场云图](https://52etf.site/) — 中文圈做得很用心的 A 股大盘云图站点。
-
-## License
-
-MIT
+- `src/app/api/heatmap` 和 `src/lib/market-heatmap.ts` 当前沿用上游，可以直接对比取数变化。更新内置快照时，同时检查行业分类和股票池文件是否对应。
+- 合并 `src/app/layout.tsx`、`src/components/market-heatmap.tsx`、`src/components/heatmap` 或 `src/lib/i18n.ts` 的变化时，保留本地品牌、官网链接和分享样式。上游推广页和访问统计从本地版本移除。
+- 合入后重跑上述检查，并验证当日云图先返回内置快照、随后切到行情直连。全量更新时修改本文的基线提交，单独合入补丁时记录其上游提交。

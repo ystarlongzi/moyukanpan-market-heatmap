@@ -25,15 +25,14 @@ export function addShareBackground(
   context.fillStyle = background;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Muted brand-red light and a soft silver lift keep the frame close to the
-  // site's charcoal palette without competing with the heatmap's red/green.
-  const warmGlow = context.createRadialGradient(
+  // 分享图边框用品牌紫色，和图内表示涨跌的红绿区分开。
+  const brandGlow = context.createRadialGradient(
     canvas.width * 0.85, 0, 0,
     canvas.width * 0.85, 0, Math.max(canvas.width, canvas.height) * 0.8
   );
-  warmGlow.addColorStop(0, "rgba(239, 68, 68, 0.16)");
-  warmGlow.addColorStop(1, "rgba(239, 68, 68, 0)");
-  context.fillStyle = warmGlow;
+  brandGlow.addColorStop(0, "rgba(109, 76, 255, 0.16)");
+  brandGlow.addColorStop(1, "rgba(109, 76, 255, 0)");
+  context.fillStyle = brandGlow;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
   const silverGlow = context.createRadialGradient(
@@ -94,7 +93,7 @@ export function addShareBackground(
   context.font = `400 ${10 * unit}px ${fontFamily}`;
   context.fillStyle = "#a4a9b1";
   context.fillText(
-    `${branding.subtitle}  ·  dapan.app`,
+    `${branding.subtitle}  ·  moyukanpan.com`,
     canvas.width / 2,
     headerHeight + source.height + footerHeight / 2,
     source.width

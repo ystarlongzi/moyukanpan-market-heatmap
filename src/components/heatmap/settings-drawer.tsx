@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
-import Link from "next/link";
-import { Bot, Check, ChevronDown, Coffee, Copy, ExternalLink, Info, Keyboard, Mail, Megaphone, Moon, Palette, Star, Sun, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Bot, Check, Copy, ExternalLink, Info, Keyboard, Moon, Palette, Star, Sun, X } from "lucide-react";
 import { toast } from "sonner";
 import { WatchlistManager } from "@/components/watchlist-panel";
 import { cn } from "@/lib/utils";
@@ -12,15 +11,10 @@ import { defaultShortcutBindings, formatShortcutKey, formatShortcutLabel, shortc
 import { watchlistMaxCount } from "@/lib/market-heatmap";
 import { type WatchlistItem } from "@/lib/watchlist";
 import { getChangeTextColor } from "./colors";
-import { authorMailto, githubProjectUrl, maxRefreshIntervalSeconds, minRefreshIntervalSeconds, themeColors } from "./constants";
+import { brandHomeUrl, brandToolsUrl, maxRefreshIntervalSeconds, minRefreshIntervalSeconds, themeColors } from "./constants";
 import { getShortcutActionLabel } from "./format";
-import { useHoverCapable, useIsMobile } from "./stream";
+import { useIsMobile } from "./stream";
 import { type DisplayMode, type FilterOpenMode, type PriceColorMode, type SettingsTab, type ThemeColorKey } from "./types";
-import { GitHubMark } from "./github-mark";
-import { RewardPanel } from "./reward-tip";
-import { RewardImage } from "./reward-image";
-import { SupporterThanks } from "./supporter-thanks";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { HeatThemeSettingsPanel } from "./theme-settings-panel";
 
 export function SettingsDrawer({
@@ -100,58 +94,6 @@ export function SettingsDrawer({
   const [recordingAction, setRecordingAction] = useState<ShortcutActionId | null>(null);
   const [copiedWebmcpPrompt, setCopiedWebmcpPrompt] = useState<string | null>(null);
   const [intervalDraft, setIntervalDraft] = useState(() => String(refreshIntervalSeconds));
-  const hoverCapable = useHoverCapable();
-  // 桌面端悬停整张卡片预览、点击放大；触屏设备默认在卡片内展开。
-  // 解析前（null）按未展开渲染，避免首帧先展开再收起的闪动。
-  const rewardPanelId = useId();
-  const touchOnly = hoverCapable === false;
-  const [rewardInlineOpen, setRewardInlineOpen] = useState(false);
-  const [rewardPreviewOpen, setRewardPreviewOpen] = useState(false);
-  const [rewardZoomOpen, setRewardZoomOpen] = useState(false);
-
-  const openRewardZoom = () => {
-    setRewardPreviewOpen(false);
-    setRewardZoomOpen(true);
-  };
-
-  useEffect(() => {
-    if (!open || tab !== "project") {
-      setRewardPreviewOpen(false);
-    }
-  }, [open, tab]);
-
-  useEffect(() => {
-    setRewardInlineOpen(hoverCapable === false);
-  }, [hoverCapable]);
-
-  useEffect(() => {
-    if (!open) {
-      setRewardInlineOpen(hoverCapable === false);
-      setRewardZoomOpen(false);
-    }
-  }, [hoverCapable, open]);
-
-  // 放大赞赏码时，Esc 只关闭放大层，不连带着把设置抽屉一起关掉。
-  useEffect(() => {
-    if (!rewardZoomOpen) {
-      return;
-    }
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== "Escape") {
-        return;
-      }
-      event.preventDefault();
-      event.stopPropagation();
-      setRewardZoomOpen(false);
-    }
-
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown, true);
-    };
-  }, [rewardZoomOpen]);
-
   useEffect(() => {
     setIntervalDraft(String(refreshIntervalSeconds));
   }, [refreshIntervalSeconds]);
@@ -285,27 +227,6 @@ export function SettingsDrawer({
   const themeLabels: Record<ThemeColorKey, string> = isEnglish
     ? { green: "Green", red: "Red", blue: "Blue", violet: "Violet" }
     : { green: "绿色", red: "红色", blue: "蓝色", violet: "紫色" };
-  const rewardTrigger = (
-    <button
-      type="button"
-      onClick={touchOnly ? () => setRewardInlineOpen((current) => !current) : openRewardZoom}
-      aria-expanded={touchOnly ? rewardInlineOpen : undefined}
-      aria-controls={touchOnly ? rewardPanelId : undefined}
-      aria-haspopup={touchOnly ? undefined : "dialog"}
-      className="inline-flex max-w-full items-center gap-3 text-left transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
-    >
-      {/* 扩展按钮命中区域到整张卡片，保留标题尺寸作为浮层定位锚点。 */}
-      <span aria-hidden className="absolute inset-0" />
-      <span className="inline-flex size-9 shrink-0 items-center justify-center border border-border bg-muted/40">
-        <Coffee className="size-4" />
-      </span>
-      <span className="text-sm font-semibold">{messages.projectSupportTitle}</span>
-      {touchOnly && (
-        <ChevronDown className={cn("size-3.5 shrink-0 text-muted-foreground transition-transform", rewardInlineOpen && "rotate-180")} />
-      )}
-    </button>
-  );
-
   return (
     <div className="absolute inset-0 z-[10010] flex items-end justify-center bg-black/62 backdrop-blur-sm" role="dialog" aria-modal="true">
       <button type="button" className="absolute inset-0" aria-label={messages.closeSheet} onClick={onClose} />
@@ -848,183 +769,38 @@ export function SettingsDrawer({
             )}
 
             {tab === "project" && (
-              <div className="space-y-4">
-                <section className="border border-border bg-background/70 p-3.5">
-                  <div className="flex items-start gap-3">
-                    <span className="inline-flex size-9 shrink-0 items-center justify-center border border-border bg-muted/40 text-foreground">
-                      <GitHubMark className="size-4" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-semibold">{messages.githubProject}</h3>
-                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                        {messages.githubProjectDescription}
-                      </p>
-                      <a
-                        href={githubProjectUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-semibold text-brand transition-colors hover:text-brand/80"
-                      >
-                        github.com/wenyuanw/a-share-heatmap
-                        <ExternalLink className="size-3.5 opacity-80" />
-                      </a>
-                    </div>
-                  </div>
-                </section>
-
-                <section className="border border-border bg-background/70 p-3.5">
-                  <div className="flex items-start gap-3">
-                    <span className="inline-flex size-9 shrink-0 items-center justify-center border border-border bg-muted/40 text-foreground">
-                      <Mail className="size-4" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-semibold">{messages.projectAuthorTitle}</h3>
-                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                        {messages.projectAuthorDescription}
-                      </p>
-                      <a
-                        href={authorMailto}
-                        className="mt-3 inline-flex items-center gap-1.5 font-mono text-[12px] font-semibold text-foreground transition-colors hover:text-brand"
-                      >
-                        {messages.projectAuthorEmail}
-                      </a>
-                    </div>
-                  </div>
-                </section>
-
-                <section className="border border-border bg-background/70">
-                  <div className="relative p-3.5">
-                    {hoverCapable === true ? (
-                      <TooltipProvider>
-                        <Tooltip open={rewardPreviewOpen && !rewardZoomOpen} onOpenChange={setRewardPreviewOpen}>
-                          <TooltipTrigger asChild>{rewardTrigger}</TooltipTrigger>
-                          <TooltipContent
-                            side={isMobile ? "bottom" : "right"}
-                            align={isMobile ? "start" : "center"}
-                            collisionPadding={16}
-                            className="z-[10020] overflow-y-auto p-3"
-                            style={{
-                              width: "min(320px, calc(100vw - 32px), calc(100dvh - 112px))",
-                              maxHeight: "var(--radix-tooltip-content-available-height)",
-                            }}
-                          >
-                            <RewardPanel messages={messages} onImageClick={openRewardZoom} />
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : rewardTrigger}
-                    <p className="ml-12 mt-1 text-xs leading-relaxed text-muted-foreground">
-                      {messages.projectSupportDescription}
+              <section className="border border-border bg-background/70 p-3.5">
+                <div className="flex items-start gap-3">
+                  <img src="/icon.svg" alt="" width={36} height={36} className="size-9 shrink-0" decoding="async" />
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-semibold">{messages.brandName}</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                      {messages.brandDescription}
                     </p>
-                  </div>
-                  {touchOnly && (
-                    <div id={rewardPanelId} hidden={!rewardInlineOpen} className="border-t border-border px-3.5 py-3">
-                      {rewardInlineOpen && (
-                        <div className="mx-auto w-full max-w-80">
-                          <RewardPanel messages={messages} onImageClick={openRewardZoom} />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </section>
-
-                <SupporterThanks messages={messages} />
-
-                <section className="relative overflow-hidden border border-dashed border-brand/45 bg-brand/8 p-3.5">
-                  <div
-                    className="pointer-events-none absolute -right-6 -top-6 size-24 rotate-12 border border-brand/20 bg-brand/10"
-                    aria-hidden
-                  />
-                  <div className="relative flex items-start gap-3">
-                    <span className="inline-flex size-9 shrink-0 items-center justify-center border border-brand/40 bg-brand/15 text-brand">
-                      <Megaphone className="size-4" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-sm font-semibold text-foreground">{messages.projectAdTitle}</h3>
-                        <span className="border border-brand/40 bg-brand/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-brand">
-                          OPEN
-                        </span>
-                      </div>
-                      <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
-                        {messages.projectAdDescription}
-                      </p>
-                      <a
-                        href={`${authorMailto}?subject=${encodeURIComponent(
-                          locale === "zh" ? "广告位招租咨询" : "Ad slot inquiry"
-                        )}`}
-                        className="mt-3 inline-flex items-center gap-1.5 border border-brand/50 bg-brand/15 px-2.5 py-1.5 text-[12px] font-semibold text-foreground transition-colors hover:bg-brand/25"
-                      >
-                        {messages.projectAdCta}
-                        <Mail className="size-3.5 opacity-80" />
-                      </a>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {[
+                        [brandHomeUrl, messages.brandHome],
+                        [brandToolsUrl, messages.brandTools],
+                      ].map(([href, label]) => (
+                        <a
+                          key={href}
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 border border-border px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-brand/45 hover:text-brand"
+                        >
+                          {label}
+                          <ExternalLink className="size-3 opacity-70" aria-hidden />
+                        </a>
+                      ))}
                     </div>
                   </div>
-                </section>
-                <section className="border border-border bg-background/70 p-3.5">
-                  <h3 className="text-sm font-semibold">{messages.sitePagesTitle}</h3>
-                  <div className="mt-2.5 grid grid-cols-2 gap-1.5">
-                    {(
-                      [
-                        ["/features", messages.sitePageFeatures],
-                        ["/changelog", messages.sitePageChangelog],
-                        ["/whats-new", messages.sitePageWhatsNew],
-                        ["/sponsors", messages.sitePageSponsors],
-                      ] as const
-                    ).map(([href, label]) => (
-                      <Link
-                        key={href}
-                        href={href}
-                        className="inline-flex items-center justify-between gap-1.5 border border-border bg-background/60 px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:border-brand/40 hover:text-foreground"
-                      >
-                        {label}
-                        <ExternalLink className="size-3 shrink-0 opacity-60" />
-                      </Link>
-                    ))}
-                  </div>
-                </section>
-              </div>
+                </div>
+              </section>
             )}
           </div>
         </div>
       </section>
-
-      {rewardZoomOpen && (
-        <div
-          className="absolute inset-0 z-[10040] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          aria-label={messages.projectSupportTitle}
-        >
-          <button
-            type="button"
-            className="absolute inset-0"
-            aria-label={messages.closeSheet}
-            onClick={() => setRewardZoomOpen(false)}
-          />
-          <div className="relative flex max-h-full w-full max-w-[min(92vw,36rem)] flex-col overflow-hidden border border-border bg-card text-card-foreground shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
-            <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-              <h3 className="text-sm font-semibold">{messages.projectSupportTitle}</h3>
-              <button
-                type="button"
-                onClick={() => setRewardZoomOpen(false)}
-                aria-label={messages.closeSheet}
-                className="inline-flex size-8 shrink-0 items-center justify-center border border-border bg-background/70 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-            <div className="min-h-0 flex-1 overflow-auto p-3">
-              <div className="border border-border">
-                <RewardImage messages={messages} />
-              </div>
-            </div>
-            <p className="border-t border-border px-4 py-2.5 text-center text-[11px] leading-relaxed text-muted-foreground">
-              {messages.projectSupportScanHint}
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
